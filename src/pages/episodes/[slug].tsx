@@ -58,10 +58,32 @@ export default function Episode({ episode }: EpisodeProps) {
     )
 }
 
+// gerando de forma dinâmica uma pagina estática
 export const getStaticPaths: GetStaticPaths = async () => {
+    const { data } = await api.get('episodes', {
+        params: {
+            _limit: 2,
+            _sort: 'published_at',
+            _order: 'desc'
+        }
+    })
+
+    const paths = data.map(episode => {
+        return {
+            params: {
+                slug: episode.id
+            }
+        }
+    })
     return {
-        paths: [],
-        fallback: 'blocking'
+        // gerando episódios de forma dinâmica no momento da build
+        paths,
+        // Determina o comportamento de quando uma pagina de um episódio é acessada que não foi gerada estaticamente
+        // fallback: false // retorna 404
+
+        //incremental static regeneration - permite gerar novas paginas conforme os usuários forem acessando e revalidam paginas que estão obsoletas (dados invalidos) 
+        // fallback: true // Os dados das paginas serão carregados somente quando a pagina for acessada (roda no cliente)
+        fallback: 'blocking' // O usuário navegara para a pagina somente quando os dados estiverem carregados. Melhor opção para SEO
     }
 }
 
